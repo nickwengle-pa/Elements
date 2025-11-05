@@ -1794,7 +1794,14 @@
         // List functionality
         const listElements = document.querySelectorAll('.list-element');
         listElements.forEach(el => {
+            const front = el.querySelector('.list-front');
+            const flipper = el.querySelector('.list-flipper');
+            flipper.style.height = `${front.offsetHeight}px`;
             el.addEventListener('click', () => {
+                const back = el.querySelector('.list-back');
+                const isFlipped = el.classList.contains('flipped');
+                const newHeight = isFlipped ? front.offsetHeight : back.offsetHeight;
+                flipper.style.height = `${newHeight}px`;
                 el.classList.toggle('flipped');
             });
         });
