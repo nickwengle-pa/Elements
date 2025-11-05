@@ -8,14 +8,14 @@
         :root {
             --cell-size: 60px;
             --gap: 4px;
-            --font-scale: 0.85;
+            --font-scale: 0.7;
         }
 
         @media (max-width: 768px) {
             :root {
                 --cell-size: 48px;
                 --gap: 3px;
-                --font-scale: 0.75;
+                --font-scale: 0.6;
             }
         }
 
@@ -23,7 +23,7 @@
             :root {
                 --cell-size: 42px;
                 --gap: 2px;
-                --font-scale: 0.65;
+                --font-scale: 0.5;
             }
         }
 
@@ -169,16 +169,9 @@
             color: #d32f2f;
         }
 
-        .show-symbols .front { display: none; }
-        .show-symbols .back { display: flex; transform: rotateY(180deg); }
-        .show-symbols .element { transform: none !important; }
-
-        .show-names .front { display: flex; }
-        .show-names .back { display: none; }
-        .show-names .element { transform: none !important; }
-
-        /* Initial state */
-        .show-names .element.flipped { transform: none; }
+        .show-symbols .element {
+            transform: rotateY(180deg) !important;
+        }
     </style>
 </head>
 <body>
@@ -266,7 +259,7 @@
         ["Samarium", "Sm", 9, 8, "f", "Sm-art magnets love this."],
         ["Europium", "Eu", 9, 9, "f", "Eu-ro banknotes glow under UV!"],
         ["Gadolinium", "Gd", 9, 10, "f", "Gd: MRI contrast agent superstar."],
-        ["Terbium", "Tb", "9,11", "f", "Tb: makes green phosphors shine."],
+        ["Terbium", "Tb", 9, 11, "f", "Tb: makes green phosphors shine."],
         ["Dysprosium", "Dy", 9, 12, "f", "Dy-namite in high-power magnets."],
         ["Holmium", "Ho", 9, 13, "f", "Ho-lmium: strongest magnetic field per atom!"],
         ["Erbium", "Er", 9, 14, "f", "Er-bium: pink glass and fiber optics."],
@@ -333,14 +326,21 @@
 
     let isSymbolMode = false;
 
+    // Function to fit text in box
+    function fitText(element) {
+        element.style.fontSize = ''; // Reset to default
+        let fontSize = parseFloat(window.getComputedStyle(element).fontSize);
+        const parentHeight = element.parentElement.clientHeight;
+        const parentWidth = element.parentElement.clientWidth;
+        while ((element.scrollHeight > parentHeight || element.scrollWidth > parentWidth) && fontSize > 5) {
+            fontSize -= 0.5;
+            element.style.fontSize = `${fontSize}px`;
+        }
+    }
+
     // Create periodic table
     function createTable() {
         table.innerHTML = '';
-        const grid = document.createElement('div');
-        grid.className = 'periodic-table';
-        grid.id = 'periodicTable';
-
-        // Create 10x18 grid with empty cells
         for (let row = 1; row <= 10; row++) {
             for (let col = 1; col <= 18; col++) {
                 const cell = document.createElement('div');
@@ -379,10 +379,13 @@
                         }
                     });
                 }
-                grid.appendChild(cell);
+                table.appendChild(cell);
             }
         }
-        table.appendChild(grid);
+        // Fit text for names (front)
+        document.querySelectorAll('.front .text').forEach(fitText);
+        // Optionally for symbols, but they should fit
+        document.querySelectorAll('.back .text').forEach(fitText);
     }
 
     // Create list view
@@ -393,8 +396,9 @@
             li.textContent = name;
             li.dataset.symbol = symbol;
             li.dataset.saying = saying;
-            li.addEventListener('click', () => {
-                detail.innerHTML = `<strong>${symbol}</strong><br><em>"${saying}"</em>`;
+            li.addEventListener('click', (e) => {
+                const target = e.currentTarget;
+                detail.innerHTML = `<strong>${target.dataset.symbol}</strong><br><em>"${target.dataset.saying}"</em>`;
                 detail.style.display = 'block';
             });
             listContainer.appendChild(li);
@@ -405,13 +409,12 @@
     toggleBtn.addEventListener('click', () => {
         const pt = document.querySelector('.periodic-table');
         isSymbolMode = !isSymbolMode;
+        document.querySelectorAll('.element').forEach(el => el.classList.remove('flipped'));
         if (isSymbolMode) {
-            pt.classList.remove('show-names');
             pt.classList.add('show-symbols');
             toggleBtn.textContent = 'Show Names';
         } else {
             pt.classList.remove('show-symbols');
-            pt.classList.add('show-names');
             toggleBtn.textContent = 'Show Symbols';
         }
     });
@@ -438,9 +441,6 @@
     // Initialize
     createTable();
     createList();
-
-    // Start in name mode
-    document.querySelector('.periodic-table').classList.add('show-names');
 </script>
 
 </body>
